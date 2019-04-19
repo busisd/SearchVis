@@ -16,16 +16,27 @@ class VisNode:
 		
 	def draw(self, win):
 		self.vis_rect.draw(win)
+
+	def undraw(self):
+		self.vis_rect.undraw()
 		
 	def setColor(self, color):
 		self.vis_rect.setFill(color)	
 	
-def BFS(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01):
+def BFS(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks=0):
 	startNode = nodes[start_pos[0] + total_rows*start_pos[1]]
 	startNode.setColor("red")
 	startNode.visited = True
 	endNode = nodes[end_pos[0] + total_rows*end_pos[1]]
 	endNode.setColor("green")
+	
+	for i in range(blocks):
+		r = random.randrange(0,total_rows)
+		c = random.randrange(0,total_cols)
+		n = nodes[r + total_rows*c]
+		if (n is not startNode and n is not endNode):
+			n.setColor("black")
+			n.visited = True
 	
 	q = SimpleQueue()
 	q.put(startNode)
@@ -56,12 +67,20 @@ def BFS(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01):
 		if (sleep_time > 0):
 			time.sleep(sleep_time)
 						
-def DFS(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01):
+def DFS(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks=0):
 	startNode = nodes[start_pos[0] + total_rows*start_pos[1]]
 	startNode.setColor("red")
 	startNode.visited = True
 	endNode = nodes[end_pos[0] + total_rows*end_pos[1]]
 	endNode.setColor("green")
+	
+	for i in range(blocks):
+		r = random.randrange(0,total_rows)
+		c = random.randrange(0,total_cols)
+		n = nodes[r + total_rows*c]
+		if (n is not startNode and n is not endNode):
+			n.setColor("black")
+			n.visited = True
 	
 	q = LifoQueue()
 	q.put(startNode)
@@ -114,8 +133,7 @@ def Greedy(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks 
 		if (n is not startNode and n is not endNode):
 			n.setColor("black")
 			n.visited = True
-
-	
+			
 	q = PriorityQueue()
 	q.put(PriorityNode(0,startNode))
 	red = 255
@@ -148,18 +166,23 @@ def Greedy(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks 
 			time.sleep(sleep_time)
 
 if __name__ == "__main__":
+	key_val = None
 	total_rows = 20
 	total_cols = 20
+	win = GraphWin("Search Visualization", total_rows*node_width+1, total_cols*node_height+1)
 	
-	win = GraphWin("hello", total_rows*node_width+1, total_cols*node_height+1)
+	while (key_val != "x"):	
+		nodes = [VisNode(r, c) for c in range(total_cols) for r in range(total_rows)]
+		for node in nodes:
+			node.draw(win)
+			
+		Greedy(nodes, start_pos = (18,18), blocks=150)
 	
-	nodes = [VisNode(r, c) for c in range(total_cols) for r in range(total_rows)]
-	for node in nodes:
-		node.draw(win)
+		key_val = win.getKey()
+		if (key_val != "x"):
+			for node in nodes:
+				node.undraw()
 		
-	Greedy(nodes, blocks=150, sleep_time = .05)
-	
-	win.getMouse()
 	win.close()
 	
 	
