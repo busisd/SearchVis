@@ -165,6 +165,8 @@ def Greedy(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks 
 		if (sleep_time > 0):
 			time.sleep(sleep_time)
 
+			
+			
 if __name__ == "__main__":
 	key_val = None
 	total_rows = 20
@@ -176,7 +178,7 @@ if __name__ == "__main__":
 		for node in nodes:
 			node.draw(win)
 			
-		Greedy(nodes, start_pos = (18,18), blocks=150)
+		Greedy(nodes, start_pos = (17,17), blocks=150)
 	
 		key_val = win.getKey()
 		if (key_val != "x"):
