@@ -111,6 +111,7 @@ def perform_search(grid, priority_funct, sleep_time = .01, corners=False, highli
 		
 		cur_node.setColor(color_rgb(int(red),int(green),int(blue)))
 		#red = red*.995
+		green = 120 - ((120-green)*.995)
 		blue = blue*.995
 		for r,c in nodes_to_add(cur_node): 
 			if (r >= 0 and c >= 0 and r < grid.rows and c < grid.cols):
@@ -152,7 +153,7 @@ def dfs_priority(grid, nodes_visited, add_node):
 	return grid.rows*total_cols-nodes_visited
 
 #Note that this heuristic won't work with corners
-def a_star_manhattan_priority(grid, nodes_visited, add_node):
+def a_star_taxi_priority(grid, nodes_visited, add_node):
 	return abs(grid.end_node.row-add_node.row)+abs(grid.end_node.col-add_node.col)+add_node.path_distance
 
 def a_star_crow_priority(grid, nodes_visited, add_node):
@@ -220,7 +221,7 @@ if __name__ == "__main__":
 		grid = NodeGrid(total_rows, total_cols, start_pos=(2,2), end_pos=(total_rows-3,total_cols-3), blocks=150)
 		grid.draw_all(win)
 		
-		perform_search(grid, a_star_manhattan_priority, corners=False)
+		perform_search(grid, a_star_taxi_priority, corners=False)
 		
 		key_val = win.getKey()
 		if (key_val != "x"):
