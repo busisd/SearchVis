@@ -18,6 +18,8 @@ class VisNode:
 		self.path_distance = 0
 		self.text = Text(self.vis_rect.getCenter(), str(self.path_distance))
 		
+		self.parent = None
+		
 	def draw(self, win):
 		self.vis_rect.draw(win)
 		self.text.draw(win)
@@ -86,7 +88,7 @@ def _corners_set(cur_node):
 	return ((cur_node.row, cur_node.col-1), (cur_node.row, cur_node.col+1), (cur_node.row-1, cur_node.col), (cur_node.row+1, cur_node.col),
 			(cur_node.row+1, cur_node.col-1), (cur_node.row+1, cur_node.col+1), (cur_node.row-1, cur_node.col+1), (cur_node.row-1, cur_node.col-1))
 
-def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False):	
+def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False, highlight_path=True):	
 	q = PriorityQueue()
 	q.put(PriorityNode(0,grid.start_node))
 	red = 255
@@ -104,6 +106,7 @@ def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False):
 		
 		if (cur_node == grid.end_node):
 			grid.end_node.setColor(color_rgb(100,255,100))
+			grid.end_node.visited = True
 			break
 		
 		cur_node.setColor(color_rgb(int(red),int(green),int(blue)))
@@ -114,6 +117,7 @@ def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False):
 				add_node = grid.nodes[r + total_rows*c]
 				if (not add_node.visited):
 					add_node.visited = True
+					add_node.parent = cur_node
 					add_node.path_distance = cur_node.path_distance+1
 					add_node.update_text()
 					nodes_visited += 1
@@ -126,10 +130,17 @@ def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False):
 					q.put(PriorityNode(add_node_priority, add_node))
 				elif (add_node.path_distance>cur_node.path_distance+1):
 					add_node.path_distance = cur_node.path_distance+1
+					add_node.parent = cur_node
 					add_node.update_text()
 
 		if (sleep_time > 0):
-			time.sleep(sleep_time)	
+			time.sleep(sleep_time)
+			
+	if (highlight_path and grid.end_node.visited):
+		cur_path_node = grid.end_node
+		while(cur_path_node is not None):
+			cur_path_node.setColor(color_rgb(90,140,225))
+			cur_path_node = cur_path_node.parent
 
 def greedy_priority(grid, nodes_visited, add_node):
 	return abs(grid.end_node.row-add_node.row)+abs(grid.end_node.col-add_node.col)
@@ -173,7 +184,7 @@ if __name__ == "__main__":
 		#grid.add_blocks_at([[i,10] for i in range(3,11)]+[[10,i] for i in range(3,11)])
 		grid.draw_all(win)
 		
-		perform_search(grid, a_star_manhattan_priority, add_corners=False)
+		perform_search(grid, a_star_manhattan_priority, add_corners=False, highlight_path=True)
 		
 		key_val = win.getKey()
 		if (key_val != "x"):
