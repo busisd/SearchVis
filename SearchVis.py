@@ -1,6 +1,7 @@
 from graphics import *
 from queue import *
 import random
+import copy
 
 node_width = 20
 node_height = 20
@@ -21,95 +22,7 @@ class VisNode:
 		self.vis_rect.undraw()
 		
 	def setColor(self, color):
-		self.vis_rect.setFill(color)	
-	
-def BFS(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks=0):
-	startNode = nodes[start_pos[0] + total_rows*start_pos[1]]
-	startNode.setColor("red")
-	startNode.visited = True
-	endNode = nodes[end_pos[0] + total_rows*end_pos[1]]
-	endNode.setColor("green")
-	
-	for i in range(blocks):
-		r = random.randrange(0,total_rows)
-		c = random.randrange(0,total_cols)
-		n = nodes[r + total_rows*c]
-		if (n is not startNode and n is not endNode):
-			n.setColor("black")
-			n.visited = True
-	
-	q = SimpleQueue()
-	q.put(startNode)
-	red = 255
-	green = 0
-	blue = 255
-	while(not q.empty()):
-		cur_node = q.get()
-		
-		if (cur_node == endNode):
-			endNode.setColor(color_rgb(100,255,100))
-			break
-		
-		cur_node.setColor(color_rgb(int(red),int(green),int(blue)))
-		red = red*.995
-		blue = blue*.995
-		for r,c in ((cur_node.row, cur_node.col-1), (cur_node.row, cur_node.col+1), (cur_node.row-1, cur_node.col), (cur_node.row+1, cur_node.col)): 
-			if (r >= 0 and c >= 0 and r < total_rows and c < total_cols):
-				add_node = nodes[r + total_rows*c]
-				if (not add_node.visited):
-					add_node.visited = True
-					if (add_node != endNode):
-						add_node.setColor(color_rgb(220,255,220))
-					else: 
-						add_node.setColor(color_rgb(30,180,30))
-						
-					q.put(add_node)
-		if (sleep_time > 0):
-			time.sleep(sleep_time)
-						
-def DFS(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks=0):
-	startNode = nodes[start_pos[0] + total_rows*start_pos[1]]
-	startNode.setColor("red")
-	startNode.visited = True
-	endNode = nodes[end_pos[0] + total_rows*end_pos[1]]
-	endNode.setColor("green")
-	
-	for i in range(blocks):
-		r = random.randrange(0,total_rows)
-		c = random.randrange(0,total_cols)
-		n = nodes[r + total_rows*c]
-		if (n is not startNode and n is not endNode):
-			n.setColor("black")
-			n.visited = True
-	
-	q = LifoQueue()
-	q.put(startNode)
-	red = 255
-	green = 0
-	blue = 255
-	while(not q.empty()):
-		cur_node = q.get()
-		
-		if (cur_node == endNode):
-			endNode.setColor(color_rgb(100,255,100))
-			break
-		
-		cur_node.setColor(color_rgb(int(red),int(green),int(blue)))
-		red = red*.995
-		blue = blue*.995
-		for r,c in ((cur_node.row, cur_node.col-1), (cur_node.row, cur_node.col+1), (cur_node.row-1, cur_node.col), (cur_node.row+1, cur_node.col)): 
-			if (r >= 0 and c >= 0 and r < total_rows and c < total_cols):
-				add_node = nodes[r + total_rows*c]
-				if (not add_node.visited):
-					add_node.visited = True
-					if (add_node != endNode):
-						add_node.setColor(color_rgb(220,255,220))
-					else: 
-						add_node.setColor(color_rgb(30,180,30))
-						
-					q.put(add_node)
-		if (sleep_time > 0):
-			time.sleep(sleep_time)
+		self.vis_rect.setFill(color)
 
 class PriorityNode(object):
 	def __init__(self, priority, node):
@@ -119,31 +32,33 @@ class PriorityNode(object):
 	def __lt__(self, other):
 		return self.priority < other.priority		
 			
-def Greedy(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks = 0):
-	startNode = nodes[start_pos[0] + total_rows*start_pos[1]]
-	startNode.setColor("red")
-	startNode.visited = True
-	endNode = nodes[end_pos[0] + total_rows*end_pos[1]]
-	endNode.setColor("green")
+def perform_search(nodes, priority_funct, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks = 0):
+	
+	start_node = nodes[start_pos[0] + total_rows*start_pos[1]]
+	start_node.setColor("red")
+	start_node.visited = True
+	end_node = nodes[end_pos[0] + total_rows*end_pos[1]]
+	end_node.setColor("green")
 	
 	for i in range(blocks):
 		r = random.randrange(0,total_rows)
 		c = random.randrange(0,total_cols)
 		n = nodes[r + total_rows*c]
-		if (n is not startNode and n is not endNode):
+		if (n is not start_node and n is not end_node):
 			n.setColor("black")
 			n.visited = True
 			
 	q = PriorityQueue()
-	q.put(PriorityNode(0,startNode))
+	q.put(PriorityNode(0,start_node))
 	red = 255
 	green = 0
 	blue = 255
+	nodes_visited = 0
 	while(not q.empty()):
 		cur_node = q.get().node
 		
-		if (cur_node == endNode):
-			endNode.setColor(color_rgb(100,255,100))
+		if (cur_node == end_node):
+			end_node.setColor(color_rgb(100,255,100))
 			break
 		
 		cur_node.setColor(color_rgb(int(red),int(green),int(blue)))
@@ -154,18 +69,26 @@ def Greedy(nodes, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks 
 				add_node = nodes[r + total_rows*c]
 				if (not add_node.visited):
 					add_node.visited = True
-					if (add_node != endNode):
+					nodes_visited += 1
+					if (add_node != end_node):
 						add_node.setColor(color_rgb(220,255,220))
 					else: 
 						add_node.setColor(color_rgb(30,180,30))
 					
-					add_node_dist = abs(endNode.row-add_node.row)+abs(endNode.col-add_node.col)
-					q.put(PriorityNode(add_node_dist, add_node))
+					add_node_priority = priority_funct(start_node, end_node, nodes_visited, add_node)
+					q.put(PriorityNode(add_node_priority, add_node))
 
 		if (sleep_time > 0):
-			time.sleep(sleep_time)
+			time.sleep(sleep_time)	
 
-			
+def greedy_priority(start_node, end_node, nodes_visited, add_node):
+	return abs(end_node.row-add_node.row)+abs(end_node.col-add_node.col)
+
+def bfs_priority(start_node, end_node, nodes_visited, add_node):
+	return nodes_visited
+
+def dfs_priority(start_node, end_node, nodes_visited, add_node):
+	return total_rows*total_cols-nodes_visited
 			
 if __name__ == "__main__":
 	key_val = None
@@ -178,7 +101,7 @@ if __name__ == "__main__":
 		for node in nodes:
 			node.draw(win)
 			
-		Greedy(nodes, start_pos = (17,17), blocks=150)
+		perform_search(nodes, dfs_priority, start_pos = (17,17), blocks=0)
 	
 		key_val = win.getKey()
 		if (key_val != "x"):
