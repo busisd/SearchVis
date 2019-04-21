@@ -62,7 +62,7 @@ class NodeGrid:
 		for i in range(blocks):
 			r = random.randrange(0,self.rows)
 			c = random.randrange(0,self.cols)
-			n = self.nodes[r + total_rows*c]
+			n = self.nodes[r + self.rows*c]
 			if (n is not self.start_node and n is not self.end_node):
 				n.setColor("black")
 				n.visited = True
@@ -88,7 +88,7 @@ def _corners_set(cur_node):
 	return ((cur_node.row, cur_node.col-1), (cur_node.row, cur_node.col+1), (cur_node.row-1, cur_node.col), (cur_node.row+1, cur_node.col),
 			(cur_node.row+1, cur_node.col-1), (cur_node.row+1, cur_node.col+1), (cur_node.row-1, cur_node.col+1), (cur_node.row-1, cur_node.col-1))
 
-def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False, highlight_path=True):	
+def perform_search(grid, priority_funct, sleep_time = .01, corners=False, highlight_path=True):	
 	q = PriorityQueue()
 	q.put(PriorityNode(0,grid.start_node))
 	red = 255
@@ -96,7 +96,7 @@ def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False, hi
 	blue = 255
 	nodes_visited = 0
 	
-	if(add_corners):
+	if(corners):
 		nodes_to_add = _corners_set
 	else:
 		nodes_to_add = _no_corners_set
@@ -110,11 +110,11 @@ def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False, hi
 			break
 		
 		cur_node.setColor(color_rgb(int(red),int(green),int(blue)))
-		red = red*.995
+		#red = red*.995
 		blue = blue*.995
 		for r,c in nodes_to_add(cur_node): 
 			if (r >= 0 and c >= 0 and r < grid.rows and c < grid.cols):
-				add_node = grid.nodes[r + total_rows*c]
+				add_node = grid.nodes[r + grid.rows*c]
 				if (not add_node.visited):
 					add_node.visited = True
 					add_node.parent = cur_node
@@ -149,7 +149,7 @@ def bfs_priority(grid, nodes_visited, add_node):
 	return nodes_visited
 
 def dfs_priority(grid, nodes_visited, add_node):
-	return total_rows*total_cols-nodes_visited
+	return grid.rows*total_cols-nodes_visited
 
 #Note that this heuristic won't work with corners
 def a_star_manhattan_priority(grid, nodes_visited, add_node):
@@ -173,6 +173,43 @@ def example1():
 		
 	win.close()
 	
+def example2():
+	total_rows = 20
+	total_cols = 20
+	win = GraphWin("Search Visualization", total_rows*node_width+1, total_cols*node_height+1)
+	
+	key_val = None
+	while (key_val != "x"):	
+		grid = NodeGrid(total_rows, total_cols, start_pos=(2,2), end_pos=(17,17), blocks=200)
+		grid.draw_all(win)
+		
+		perform_search(grid, a_star_crow_priority, add_corners=True, highlight_path=True)
+		
+		key_val = win.getKey()
+		if (key_val != "x"):
+			grid.undraw_all()
+		
+	win.close()
+
+def example3():
+	total_rows = 10
+	total_cols = 10
+	win = GraphWin("Search Visualization", total_rows*node_width+1, total_cols*node_height+1)
+	
+	key_val = None
+	while (key_val != "x"):	
+		grid = NodeGrid(total_rows, total_cols, start_pos=(2,2), end_pos=(8,8), blocks=40)
+		grid.draw_all(win)
+		
+		perform_search(grid, bfs_priority, add_corners=False, highlight_path=True)
+		
+		key_val = win.getKey()
+		if (key_val != "x"):
+			grid.undraw_all()
+		
+	win.close()
+
+	
 if __name__ == "__main__":
 	total_rows = 20
 	total_cols = 20
@@ -180,11 +217,10 @@ if __name__ == "__main__":
 	
 	key_val = None
 	while (key_val != "x"):	
-		grid = NodeGrid(total_rows, total_cols, start_pos=(2,2), end_pos=(17,17), blocks=150)
-		#grid.add_blocks_at([[i,10] for i in range(3,11)]+[[10,i] for i in range(3,11)])
+		grid = NodeGrid(total_rows, total_cols, start_pos=(2,2), end_pos=(total_rows-3,total_cols-3), blocks=150)
 		grid.draw_all(win)
 		
-		perform_search(grid, a_star_manhattan_priority, add_corners=False, highlight_path=True)
+		perform_search(grid, a_star_manhattan_priority, corners=False)
 		
 		key_val = win.getKey()
 		if (key_val != "x"):
@@ -192,4 +228,4 @@ if __name__ == "__main__":
 		
 	win.close()
 	
-	#todo: priority integration, highlight final path
+	#todo: priority integration? command line integration
