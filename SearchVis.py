@@ -32,8 +32,29 @@ class PriorityNode(object):
 	def __lt__(self, other):
 		return self.priority < other.priority		
 			
+class NodeGrid:
+	def __init__(total_rows, total_cols, win, start_pos=(0,0), end_pos = None, blocks=0):
+		self.rows = total_rows
+		self.cols = total_cols
+		self.nodes = [VisNode(r, c) for c in range(total_cols) for r in range(total_rows)]
+		if (blocks > 0):
+			pass #self.make_blocks(blocks)
+		if end_pos is None:
+			end_pos = (self.rows-1, self.cols-1)
+		self.start_node = self.nodes[start_pos[0] + self.rows*start_pos[1]]
+		self.end_node = self.nodes[end_pos[0] + self.rows*end_pos[1]]
+		
+	def make_blocks(blocks):
+		for i in range(blocks):
+			r = random.randrange(0,total_rows)
+			c = random.randrange(0,total_cols)
+			n = nodes[r + total_rows*c]
+			if (n is not start_node and n is not end_node):
+				n.setColor("black")
+				n.visited = True
+
+		
 def perform_search(nodes, priority_funct, start_pos = (2,10), end_pos = (6,3), sleep_time = .01, blocks = 0):
-	
 	start_node = nodes[start_pos[0] + total_rows*start_pos[1]]
 	start_node.setColor("red")
 	start_node.visited = True
@@ -91,17 +112,17 @@ def dfs_priority(start_node, end_node, nodes_visited, add_node):
 	return total_rows*total_cols-nodes_visited
 			
 if __name__ == "__main__":
-	key_val = None
 	total_rows = 20
 	total_cols = 20
 	win = GraphWin("Search Visualization", total_rows*node_width+1, total_cols*node_height+1)
 	
+	key_val = None
 	while (key_val != "x"):	
 		nodes = [VisNode(r, c) for c in range(total_cols) for r in range(total_rows)]
 		for node in nodes:
 			node.draw(win)
 			
-		perform_search(nodes, dfs_priority, start_pos = (17,17), blocks=0)
+		perform_search(nodes, greedy_priority, start_pos = (17,17), blocks=0)
 	
 		key_val = win.getKey()
 		if (key_val != "x"):
