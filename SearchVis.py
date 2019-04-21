@@ -69,7 +69,7 @@ class NodeGrid:
 		for pos in block_pos_list:
 			node = self.nodes[pos[0] + self.rows*pos[1]]
 			node.setColor("black")
-			node.setVisited = True
+			node.visited = True
 			
 	def draw_all(self, win):
 		for node in self.nodes:
@@ -79,14 +79,26 @@ class NodeGrid:
 		for node in self.nodes:
 			node.undraw()
 
-		
-def perform_search(grid, priority_funct, sleep_time = .01):	
+
+def _no_corners_set(cur_node):
+	return ((cur_node.row, cur_node.col-1), (cur_node.row, cur_node.col+1), (cur_node.row-1, cur_node.col), (cur_node.row+1, cur_node.col))
+def _corners_set(cur_node):
+	return ((cur_node.row, cur_node.col-1), (cur_node.row, cur_node.col+1), (cur_node.row-1, cur_node.col), (cur_node.row+1, cur_node.col),
+			(cur_node.row+1, cur_node.col-1), (cur_node.row+1, cur_node.col+1), (cur_node.row-1, cur_node.col+1), (cur_node.row-1, cur_node.col-1))
+
+def perform_search(grid, priority_funct, sleep_time = .01, add_corners=False):	
 	q = PriorityQueue()
 	q.put(PriorityNode(0,grid.start_node))
 	red = 255
 	green = 0
 	blue = 255
 	nodes_visited = 0
+	
+	if(add_corners):
+		nodes_to_add = _corners_set
+	else:
+		nodes_to_add = _no_corners_set
+	
 	while(not q.empty()):
 		cur_node = q.get().node
 		
@@ -97,7 +109,7 @@ def perform_search(grid, priority_funct, sleep_time = .01):
 		cur_node.setColor(color_rgb(int(red),int(green),int(blue)))
 		red = red*.995
 		blue = blue*.995
-		for r,c in ((cur_node.row, cur_node.col-1), (cur_node.row, cur_node.col+1), (cur_node.row-1, cur_node.col), (cur_node.row+1, cur_node.col)): 
+		for r,c in nodes_to_add(cur_node): 
 			if (r >= 0 and c >= 0 and r < grid.rows and c < grid.cols):
 				add_node = grid.nodes[r + total_rows*c]
 				if (not add_node.visited):
@@ -128,20 +140,40 @@ def bfs_priority(grid, nodes_visited, add_node):
 def dfs_priority(grid, nodes_visited, add_node):
 	return total_rows*total_cols-nodes_visited
 
-def a_star_priority(grid, nodes_visited, add_node):
-	return abs(grid.end_node.row-add_node.row)+abs(grid.end_node.col-add_node.col)-add_node.path_distance
+#Note that this heuristic won't work with corners
+def a_star_manhattan_priority(grid, nodes_visited, add_node):
+	return abs(grid.end_node.row-add_node.row)+abs(grid.end_node.col-add_node.col)+add_node.path_distance
 
+def a_star_crow_priority(grid, nodes_visited, add_node):
+	return (((grid.end_node.row-add_node.row)**2+(grid.end_node.col-add_node.col)**2)**(1/2))+add_node.path_distance
+
+def example1():
+	total_rows = 20
+	total_cols = 20
+	win = GraphWin("Search Visualization", total_rows*node_width+1, total_cols*node_height+1)
+	
+	grid = NodeGrid(total_rows, total_cols, start_pos=(2,2), end_pos=(17,17), blocks=0)
+	grid.add_blocks_at([[i,10] for i in range(3,11)]+[[10,i] for i in range(3,11)])
+	grid.draw_all(win)
+	
+	perform_search(grid, a_star_crow_priority, add_corners=True)
+	
+	key_val = win.getKey()
+		
+	win.close()
+	
 if __name__ == "__main__":
-	total_rows = 5
-	total_cols = 5
+	total_rows = 20
+	total_cols = 20
 	win = GraphWin("Search Visualization", total_rows*node_width+1, total_cols*node_height+1)
 	
 	key_val = None
 	while (key_val != "x"):	
-		grid = NodeGrid(total_rows, total_cols, blocks = 5)
+		grid = NodeGrid(total_rows, total_cols, start_pos=(2,2), end_pos=(17,17), blocks=150)
+		#grid.add_blocks_at([[i,10] for i in range(3,11)]+[[10,i] for i in range(3,11)])
 		grid.draw_all(win)
 		
-		perform_search(grid, greedy_priority, sleep_time=.5)
+		perform_search(grid, a_star_manhattan_priority, add_corners=False)
 		
 		key_val = win.getKey()
 		if (key_val != "x"):
@@ -149,4 +181,4 @@ if __name__ == "__main__":
 		
 	win.close()
 	
-	
+	#todo: priority integration, highlight final path
